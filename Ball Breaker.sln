@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32328.378
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ball Breaker", "Ball Breaker\Ball Breaker.csproj", "{336E429E-73AF-400F-A056-B60D4BFF3027}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{336E429E-73AF-400F-A056-B60D4BFF3027}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{336E429E-73AF-400F-A056-B60D4BFF3027}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{336E429E-73AF-400F-A056-B60D4BFF3027}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{336E429E-73AF-400F-A056-B60D4BFF3027}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {01109586-8659-43FD-A9CC-8A3FEB73DF0C}
+	EndGlobalSection
+EndGlobal
