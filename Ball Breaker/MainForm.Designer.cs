@@ -72,6 +72,7 @@
             this.buttonCancelTurn.TabIndex = 2;
             this.buttonCancelTurn.Text = "Cancel turn";
             this.buttonCancelTurn.UseVisualStyleBackColor = true;
+            this.buttonCancelTurn.Click += new System.EventHandler(this.buttonCancelTurn_Click);
             // 
             // labelScore
             // 

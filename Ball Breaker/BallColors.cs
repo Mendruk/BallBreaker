@@ -6,5 +6,6 @@ public enum BallColors
     Green,
     Blue,
     Yellow,
-    Violet
+    Violet,
+    None
 }

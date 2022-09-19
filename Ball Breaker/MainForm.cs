@@ -25,7 +25,15 @@ namespace Ball_Breaker
             int x = e.X / cellSizeInPixels;
             int y = e.Y / cellSizeInPixels;
 
-            game.SelectCells(x,y);
+            game.SelectBall(x,y);
+
+            labelScore.Text = $"Score: {game.Score}";
+
+            pictureGameField.Refresh();
+        }
+
+        private void buttonCancelTurn_Click(object sender, EventArgs e)
+        {
 
             pictureGameField.Refresh();
         }

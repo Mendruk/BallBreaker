@@ -5,17 +5,22 @@
         private static readonly Random random = new();
         static Dictionary<BallColors, Brush> brushes = new()
         {
-            { BallColors.Red,    Brushes.Red },
-            { BallColors.Green,  Brushes.Green },
-            { BallColors.Blue,   Brushes.Blue },
+            { BallColors.Red, Brushes.Red },
+            { BallColors.Green, Brushes.Green },
+            { BallColors.Blue, Brushes.Blue },
             { BallColors.Yellow, Brushes.Yellow },
             { BallColors.Violet, Brushes.Violet }
         };
 
-        private readonly Rectangle ballRectangle;
-        private readonly Rectangle strokeRectangle;
+        private readonly int cellSizeInPixels;
+        private readonly int offset;
+
+        private Rectangle ballRectangle;
+        private Rectangle strokeRectangle;
+
 
         public BallColors BallColor;
+
         public int X;
         public int Y;
 
@@ -24,22 +29,19 @@
             X = x;
             Y = y;
 
-            int offset = cellSizeInPixels / 10;
+            this.cellSizeInPixels = cellSizeInPixels;
 
-            ballRectangle = new Rectangle(x * cellSizeInPixels + offset, y * cellSizeInPixels + offset,
-                cellSizeInPixels - offset * 2, cellSizeInPixels - offset * 2);
+            offset = cellSizeInPixels / 10;
 
-            strokeRectangle = new Rectangle(x * cellSizeInPixels, y * cellSizeInPixels,
-                cellSizeInPixels, cellSizeInPixels);
+            RefreshRectangle();
 
-            BallColor = (BallColors)random.Next(Enum.GetNames(typeof(BallColors)).Length);
+            BallColor = GetRandomColor();
         }
 
-        public void Draw(Graphics graphics)
+        public void DrawBall(Graphics graphics)
         {
             if (brushes.TryGetValue(BallColor, out Brush? brash))
                 graphics.FillEllipse(brash, ballRectangle);
-
         }
 
         public void DrawStroke(Graphics graphics)
@@ -50,6 +52,20 @@
         public void DrawSelection(Graphics graphics)
         {
             graphics.FillRectangle(Brushes.White, strokeRectangle);
+        }
+
+        public void RefreshRectangle()
+        {
+            ballRectangle = new Rectangle(X * cellSizeInPixels + offset, Y * cellSizeInPixels + offset,
+                cellSizeInPixels - offset * 2, cellSizeInPixels - offset * 2);
+
+            strokeRectangle = new Rectangle(X * cellSizeInPixels, Y * cellSizeInPixels,
+                cellSizeInPixels, cellSizeInPixels);
+        }
+
+        public BallColors GetRandomColor()
+        {
+            return (BallColors)random.Next(Enum.GetNames(typeof(BallColors)).Length - 1);
         }
     }
 }
