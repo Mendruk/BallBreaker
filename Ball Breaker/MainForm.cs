@@ -10,14 +10,18 @@ namespace Ball_Breaker
         {
             InitializeComponent();
 
-            cellSizeInPixels = Math.Min(pictureGameField.Width, pictureGameField.Height)/sizeInCells;
+            cellSizeInPixels = Math.Min(pictureGameField.Width, pictureGameField.Height) / sizeInCells;
 
             game = new Game(sizeInCells, cellSizeInPixels);
         }
 
         private void pictureGameField_Paint(object sender, PaintEventArgs e)
         {
-            game.Draw(e.Graphics);
+            game.Draw(e.Graphics);            
+            
+            labelScore.Text = $"Score: {game.Score}";
+
+            buttonUndo.Enabled = game.CanUndo;
         }
 
         private void pictureGameField_MouseClick(object sender, MouseEventArgs e)
@@ -25,16 +29,24 @@ namespace Ball_Breaker
             int x = e.X / cellSizeInPixels;
             int y = e.Y / cellSizeInPixels;
 
-            game.SelectBall(x,y);
-
-            labelScore.Text = $"Score: {game.Score}";
+            game.SelectBall(x, y);
 
             pictureGameField.Refresh();
         }
 
-        private void buttonCancelTurn_Click(object sender, EventArgs e)
+        private void buttonUndo_Click(object sender, EventArgs e)
         {
+            if (!game.CanUndo)
+                return;
 
+            game.ReturnStates();
+
+            pictureGameField.Refresh();
+        }
+
+        private void buttonNewGame_Click(object sender, EventArgs e)
+        {
+            game.StartNewGame();
             pictureGameField.Refresh();
         }
     }

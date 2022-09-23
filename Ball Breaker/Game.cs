@@ -1,167 +1,226 @@
 ﻿using System.Drawing.Drawing2D;
 
-namespace Ball_Breaker
+namespace Ball_Breaker;
+
+public class Game
 {
-    public class Game
+    private readonly int cellSizeInPixels;
+    private readonly int sizeInCells;
+
+    private readonly List<Ball> balls;
+    private readonly List<Ball> selectedBalls;
+
+    private int pastScore;
+    public int Score;
+    public bool CanUndo;
+
+    public Game(int sizeInCells, int cellSizeInPixels)
     {
-        private readonly int sizeInCells;
-        private readonly int cellSizeInPixels;
+        this.sizeInCells = sizeInCells;
+        this.cellSizeInPixels = cellSizeInPixels;
 
-        private List<Cell> cells;
-        private List<Cell> selectedBalls;
+        selectedBalls = new List<Ball>();
+        balls = new List<Ball>();
 
-        public int Score;
-
-        public Game(int sizeInCells, int cellSizeInPixels)
-        {
-            this.sizeInCells = sizeInCells;
-            this.cellSizeInPixels = cellSizeInPixels;
-
-            cells = new();
-
-            selectedBalls = new List<Cell>();
-
-            for (int x = 0; x < sizeInCells; x++)
-                for (int y = 0; y < sizeInCells; y++)
-                    cells.Add(new Cell(x, y, cellSizeInPixels));
-        }
-
-        public void Draw(Graphics graphics)
-        {
-            graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-            for (int x = 0; x < sizeInCells; x++)
-                graphics.DrawLine(Pens.Gray, x * cellSizeInPixels, 0,
-                    x * cellSizeInPixels, sizeInCells * cellSizeInPixels);
-
+        for (int x = 0; x < sizeInCells; x++)
             for (int y = 0; y < sizeInCells; y++)
-                graphics.DrawLine(Pens.Gray, 0, y * cellSizeInPixels,
-                    sizeInCells * cellSizeInPixels, y * cellSizeInPixels);
+                balls.Add(new Ball(x, y, cellSizeInPixels));
+    }
 
-            foreach (Cell selectedCell in selectedBalls)
-                selectedCell.DrawStroke(graphics);
+    public void Draw(Graphics graphics)
+    {
+        graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
-            foreach (Cell selectedCell in selectedBalls)
-                selectedCell.DrawSelection(graphics);
+        for (int x = 0; x <= sizeInCells; x++)
+            graphics.DrawLine(Pens.Gray, x * cellSizeInPixels, 0, x * cellSizeInPixels, sizeInCells * cellSizeInPixels);
 
-            foreach (Cell cell in cells)
-                cell.DrawBall(graphics);
+        for (int y = 0; y <= sizeInCells; y++)
+            graphics.DrawLine(Pens.Gray, 0, y * cellSizeInPixels, sizeInCells * cellSizeInPixels, y * cellSizeInPixels);
+
+        foreach (Ball ball in selectedBalls)
+            ball.DrawStroke(graphics);
+
+        foreach (Ball ball in selectedBalls)
+            ball.DrawSelection(graphics);
+
+        foreach (Ball cell in balls)
+            cell.DrawBall(graphics);
+
+        if (selectedBalls.Count > 0)
+            selectedBalls
+                .OrderBy(ball => ball.X)
+                .OrderBy(ball => ball.Y)
+                .First()
+                .DrawCloud(graphics,CalculateScore(selectedBalls.Count));
+    }
+
+    public void SelectBall(int x, int y)
+    {
+        Ball selectedBall = balls.Find(cell => cell.X == x && cell.Y == y);
+
+        if (selectedBall.BallColor == BallColors.None)
+        {
+            selectedBalls.Clear();
+            return;
         }
 
-        public void SelectBall(int x, int y)
+        if (selectedBalls.Contains(selectedBall))
         {
-            Cell selectedBall = cells.Find(cell => cell.X == x && cell.Y == y);
+            CanUndo = true;
 
-            if (selectedBall.BallColor == BallColors.None)
-            {
-                selectedBalls.Clear();
-                return;
-            }
+            RememberStates();
 
-            if (selectedBalls.Contains(selectedBall))
-            {
-                FillInVoidsVertical(selectedBalls);
-                FillInVoidsHorizontal(selectedBalls);
+            FillInVoidsVertical(selectedBalls);
+            FillInVoidsHorizontal(selectedBalls);
 
-                Score += CalculateScore(selectedBalls.Count);
-                selectedBalls.Clear();
-
-                return;
-            }
-
+            Score += CalculateScore(selectedBalls.Count);
             selectedBalls.Clear();
 
-            BallColors selectedCellColor = selectedBall.BallColor;
-
-            Stack<Cell> cellsStack = new();
-
-            cellsStack.Push(selectedBall);
-
-            while (cellsStack.Count > 0)
+            if (IsNoTurn())
             {
-                Cell ball = cellsStack.Pop();
-
-                selectedBalls.Add(ball);
-
-                foreach (Cell ballToPush in EnumerateAdjacentBalls(ball).Where(ball => ball != null))
-                    if (ballToPush.BallColor == selectedCellColor &&
-                        !selectedBalls.OfType<Cell>()
-                            .Contains(ballToPush))
-                        cellsStack.Push(ballToPush);
+                MessageBox.Show("Game Over!", "Game Over");
+                StartNewGame();
             }
 
-            if (selectedBalls.Count == 1)
-            {
-                selectedBalls.Clear();
-                return;
-            }
+            return;
         }
 
-        private IEnumerable<Cell> EnumerateAdjacentBalls(Cell selectedCell)
+        selectedBalls.Clear();
+
+        BallColors selectedBallColor = selectedBall.BallColor;
+
+        Stack<Ball> ballsStack = new();
+
+        ballsStack.Push(selectedBall);
+
+        while (ballsStack.Count > 0)
         {
-            //todo
-            if (selectedCell.X + 1 < sizeInCells)
-                yield return cells.Find(cell => cell.X == selectedCell.X + 1 && cell.Y == selectedCell.Y);
+            Ball ball = ballsStack.Pop();
 
-            if (selectedCell.X - 1 >= 0)
-                yield return cells.Find(cell => cell.X == selectedCell.X - 1 && cell.Y == selectedCell.Y);
+            selectedBalls.Add(ball);
 
-            if (selectedCell.Y + 1 < sizeInCells)
-                yield return cells.Find(cell => cell.X == selectedCell.X && cell.Y == selectedCell.Y + 1);
-
-            if (selectedCell.Y - 1 >= 0)
-                yield return cells.Find(cell => cell.X == selectedCell.X && cell.Y == selectedCell.Y - 1);
+            foreach (Ball ballToPush in EnumerateAdjacentBalls(ball).Where(ball => ball != null))
+                if (ballToPush.BallColor == selectedBallColor &&
+                    !selectedBalls.OfType<Ball>()
+                        .Contains(ballToPush))
+                    ballsStack.Push(ballToPush);
         }
 
-        private void FillInVoidsVertical(List<Cell> cellsToFill)
+        if (selectedBalls.Count == 1)
         {
-            foreach (Cell cellToFill in cellsToFill)
-            {
-                cellToFill.BallColor = BallColors.None;
-
-                List<Cell> cellsToMove = cells
-                    .Where(cell => cell.X == cellToFill.X && cell.Y < cellToFill.Y)
-                    .ToList();
-
-                foreach (Cell cell in cellsToMove)
-                {
-                    cell.Y++;
-                    cell.RefreshRectangle();
-                }
-
-                cellToFill.Y = 0;
-
-            }
-        }
-        private void FillInVoidsHorizontal(List<Cell> cellsToFill)
-        {
-
-            foreach (Cell cellToFill in cellsToFill)
-            {
-                if (cells.Where(cell => cell.X == cellToFill.X).All(cell => cell.BallColor == BallColors.None))
-                {
-                    List<Cell> cellsToMove = cells.Where(cell => cell.X == cellToFill.X).ToList();
-
-                    foreach (Cell cell in cells.Where(cell => cell.X < cellToFill.X).ToList())
-                    {
-                        cell.X++;
-                        cell.RefreshRectangle();
-                    }
-
-                    foreach (Cell cell in cellsToMove)
-                    {
-                        cell.X = 0;
-                        cell.BallColor = cell.GetRandomColor();
-                        cell.RefreshRectangle();
-                        
-                    }
-                }
-            }
-        }
-        private int CalculateScore(int ballCount)
-        {
-            return ballCount * (ballCount - 1);
+            selectedBalls.Clear();
         }
     }
 
+    private IEnumerable<Ball> EnumerateAdjacentBalls(Ball selectedBall)
+    {
+        //todo try remove repeat
+        if (selectedBall.X + 1 < sizeInCells)
+            yield return balls.Find(ball => ball.X == selectedBall.X + 1 && ball.Y == selectedBall.Y);
+
+        if (selectedBall.X - 1 >= 0)
+            yield return balls.Find(ball => ball.X == selectedBall.X - 1 && ball.Y == selectedBall.Y);
+
+        if (selectedBall.Y + 1 < sizeInCells)
+            yield return balls.Find(ball => ball.X == selectedBall.X && ball.Y == selectedBall.Y + 1);
+
+        if (selectedBall.Y - 1 >= 0)
+            yield return balls.Find(ball => ball.X == selectedBall.X && ball.Y == selectedBall.Y - 1);
+    }
+
+    private void FillInVoidsVertical(List<Ball> ballsToFill)
+    {
+        foreach (Ball ballToFill in ballsToFill)
+        {
+            ballToFill.BallColor = BallColors.None;
+
+            List<Ball> ballsToMove = balls
+                .Where(ball => ball.X == ballToFill.X && ball.Y < ballToFill.Y)
+                .ToList();
+
+            foreach (Ball cell in ballsToMove)
+            {
+                cell.Y++;
+                cell.RefreshRectangle();
+            }
+
+            ballToFill.Y = 0;
+            ballToFill.RefreshRectangle();
+        }
+    }
+
+    private void FillInVoidsHorizontal(List<Ball> ballsToFill)
+    {
+        foreach (Ball ballToFill in ballsToFill)
+        {
+            if (balls.Where(ball => ball.X == ballToFill.X)
+                .Any(ball => ball.BallColor != BallColors.None))
+                continue;
+
+            List<Ball> ballsToMove = balls.Where(ball => ball.X == ballToFill.X).ToList();
+
+            foreach (Ball ball in balls.Where(ball => ball.X < ballToFill.X))
+            {
+                ball.X++;
+                ball.RefreshRectangle();
+            }
+
+            foreach (Ball ball in ballsToMove)
+            {
+                ball.X = 0;
+                ball.BallColor = Ball.GetRandomColor();
+                ball.RefreshRectangle();
+            }
+        }
+    }
+
+    private int CalculateScore(int ballCount)
+    {
+        return ballCount * (ballCount - 1);
+    }
+
+    private bool IsNoTurn()
+    {
+        //todo rename
+        foreach (Ball notEmptyBall in balls.Where(ball => ball.BallColor != BallColors.None))
+        {
+            if (EnumerateAdjacentBalls(notEmptyBall).Any(ball => ball.BallColor == notEmptyBall.BallColor))
+                return false;
+        }
+
+        return true;
+    }
+
+    // todo rename
+    private void RememberStates()
+    {
+        pastScore = Score;
+
+        foreach (Ball ball in balls)
+            ball.RememberCurrentState();
+    }
+
+    //todo rename
+    public void ReturnStates()
+    {
+        Score = pastScore;
+        CanUndo = false;
+        selectedBalls.Clear();
+
+        foreach (Ball ball in balls)
+        {
+            ball.ReturnPreviousState();
+            ball.RefreshRectangle();
+        }
+    }
+
+    public void StartNewGame()
+    {
+        Score = 0;
+        CanUndo = false;
+        selectedBalls.Clear();
+
+        foreach (Ball ball in balls)
+            ball.BallColor = Ball.GetRandomColor();
+    }
 }

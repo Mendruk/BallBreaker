@@ -29,8 +29,8 @@
         private void InitializeComponent()
         {
             this.pictureGameField = new System.Windows.Forms.PictureBox();
-            this.buttonRestart = new System.Windows.Forms.Button();
-            this.buttonCancelTurn = new System.Windows.Forms.Button();
+            this.buttonNewGame = new System.Windows.Forms.Button();
+            this.buttonUndo = new System.Windows.Forms.Button();
             this.labelScore = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureGameField)).BeginInit();
             this.SuspendLayout();
@@ -49,30 +49,32 @@
             this.pictureGameField.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureGameField_Paint);
             this.pictureGameField.MouseClick += new System.Windows.Forms.MouseEventHandler(this.pictureGameField_MouseClick);
             // 
-            // buttonRestart
+            // buttonNewGame
             // 
-            this.buttonRestart.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.buttonNewGame.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonRestart.Location = new System.Drawing.Point(12, 612);
-            this.buttonRestart.Name = "buttonRestart";
-            this.buttonRestart.Size = new System.Drawing.Size(113, 29);
-            this.buttonRestart.TabIndex = 1;
-            this.buttonRestart.Text = "Restart";
-            this.buttonRestart.UseVisualStyleBackColor = true;
+            this.buttonNewGame.Location = new System.Drawing.Point(12, 612);
+            this.buttonNewGame.Name = "buttonNewGame";
+            this.buttonNewGame.Size = new System.Drawing.Size(113, 29);
+            this.buttonNewGame.TabIndex = 1;
+            this.buttonNewGame.Text = "New Game";
+            this.buttonNewGame.UseVisualStyleBackColor = true;
+            this.buttonNewGame.Click += new System.EventHandler(this.buttonNewGame_Click);
             // 
-            // buttonCancelTurn
+            // buttonUndo
             // 
-            this.buttonCancelTurn.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            this.buttonUndo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonCancelTurn.Location = new System.Drawing.Point(476, 612);
-            this.buttonCancelTurn.Name = "buttonCancelTurn";
-            this.buttonCancelTurn.Size = new System.Drawing.Size(113, 29);
-            this.buttonCancelTurn.TabIndex = 2;
-            this.buttonCancelTurn.Text = "Cancel turn";
-            this.buttonCancelTurn.UseVisualStyleBackColor = true;
-            this.buttonCancelTurn.Click += new System.EventHandler(this.buttonCancelTurn_Click);
+            this.buttonUndo.Enabled = false;
+            this.buttonUndo.Location = new System.Drawing.Point(476, 612);
+            this.buttonUndo.Name = "buttonUndo";
+            this.buttonUndo.Size = new System.Drawing.Size(113, 29);
+            this.buttonUndo.TabIndex = 2;
+            this.buttonUndo.Text = "Undo";
+            this.buttonUndo.UseVisualStyleBackColor = true;
+            this.buttonUndo.Click += new System.EventHandler(this.buttonUndo_Click);
             // 
             // labelScore
             // 
@@ -93,8 +95,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(601, 653);
             this.Controls.Add(this.labelScore);
-            this.Controls.Add(this.buttonCancelTurn);
-            this.Controls.Add(this.buttonRestart);
+            this.Controls.Add(this.buttonUndo);
+            this.Controls.Add(this.buttonNewGame);
             this.Controls.Add(this.pictureGameField);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.MaximizeBox = false;
@@ -109,8 +111,8 @@
         #endregion
 
         private PictureBox pictureGameField;
-        private Button buttonRestart;
-        private Button buttonCancelTurn;
+        private Button buttonNewGame;
+        private Button buttonUndo;
         private Label labelScore;
     }
 }

@@ -1,9 +1,11 @@
 ﻿namespace Ball_Breaker
 {
-    public class Cell
+    public class Ball
     {
-        private static readonly Random random = new();
-        static Dictionary<BallColors, Brush> brushes = new()
+        private static readonly Font Font = new(FontFamily.GenericSansSerif, 7, FontStyle.Bold);
+        private static readonly Random Random = new();
+
+        static Dictionary<BallColors, Brush> BallBrushes = new()
         {
             { BallColors.Red, Brushes.Red },
             { BallColors.Green, Brushes.Green },
@@ -18,13 +20,16 @@
         private Rectangle ballRectangle;
         private Rectangle strokeRectangle;
 
+        private BallColors pastBallColor;
+        private int pastX;
+        private int pastY;
+
 
         public BallColors BallColor;
-
         public int X;
         public int Y;
 
-        public Cell(int x, int y, int cellSizeInPixels)
+        public Ball(int x, int y, int cellSizeInPixels)
         {
             X = x;
             Y = y;
@@ -37,10 +42,14 @@
 
             BallColor = GetRandomColor();
         }
+        public static BallColors GetRandomColor()
+        {
+            return (BallColors)Random.Next(Enum.GetNames(typeof(BallColors)).Length - 1);
+        }
 
         public void DrawBall(Graphics graphics)
         {
-            if (brushes.TryGetValue(BallColor, out Brush? brash))
+            if (BallBrushes.TryGetValue(BallColor, out Brush? brash))
                 graphics.FillEllipse(brash, ballRectangle);
         }
 
@@ -54,6 +63,11 @@
             graphics.FillRectangle(Brushes.White, strokeRectangle);
         }
 
+        public void DrawCloud(Graphics graphics, int score)
+        {
+            graphics.DrawString(score.ToString(), Font, Brushes.Black, strokeRectangle.X, strokeRectangle.Y);
+        }
+
         public void RefreshRectangle()
         {
             ballRectangle = new Rectangle(X * cellSizeInPixels + offset, Y * cellSizeInPixels + offset,
@@ -63,9 +77,18 @@
                 cellSizeInPixels, cellSizeInPixels);
         }
 
-        public BallColors GetRandomColor()
+        public void RememberCurrentState()
         {
-            return (BallColors)random.Next(Enum.GetNames(typeof(BallColors)).Length - 1);
+            pastBallColor = BallColor;
+            pastX = X;
+            pastY = Y;
+        }
+
+        public void ReturnPreviousState()
+        {
+            BallColor = pastBallColor;
+            X = pastX;
+            Y = pastY;
         }
     }
 }
