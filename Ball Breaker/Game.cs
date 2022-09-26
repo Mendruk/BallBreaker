@@ -51,12 +51,15 @@ public class Game
                 .OrderBy(ball => ball.X)
                 .OrderBy(ball => ball.Y)
                 .First()
-                .DrawCloud(graphics,CalculateScore(selectedBalls.Count));
+                .DrawCloud(graphics, CalculateScore(selectedBalls.Count));
     }
 
     public void SelectBall(int x, int y)
     {
         Ball selectedBall = balls.Find(cell => cell.X == x && cell.Y == y);
+
+        if (selectedBall == null)
+            return;
 
         if (selectedBall.BallColor == BallColors.None)
         {
@@ -72,6 +75,7 @@ public class Game
 
             FillInVoidsVertical(selectedBalls);
             FillInVoidsHorizontal(selectedBalls);
+            FillInVoidsInColumn();
 
             Score += CalculateScore(selectedBalls.Count);
             selectedBalls.Clear();
@@ -130,47 +134,89 @@ public class Game
 
     private void FillInVoidsVertical(List<Ball> ballsToFill)
     {
+        List<Ball> ballsToEnque = new List<Ball>();
+
         foreach (Ball ballToFill in ballsToFill)
         {
             ballToFill.BallColor = BallColors.None;
 
             List<Ball> ballsToMove = balls
-                .Where(ball => ball.X == ballToFill.X && ball.Y < ballToFill.Y)
+                .Where(ball => ball.X == ballToFill.X &&
+                               ball.Y < ballToFill.Y &&
+                               ball.BallColor != BallColors.None)
+                .OrderByDescending(ball => ball.Y)
+                .ToList();
+
+            ballsToEnque = ballsToMove
+                .Concat(ballsToEnque)
                 .ToList();
 
             foreach (Ball cell in ballsToMove)
-            {
                 cell.Y++;
-                cell.RefreshRectangle();
-            }
 
-            ballToFill.Y = 0;
-            ballToFill.RefreshRectangle();
+            if (ballsToMove.Count > 0)
+            {
+                ballToFill.Y = ballsToMove.OrderBy(ball => ball.Y).First().Y - 1;
+                ballToFill.RefreshRectangle();
+            }
         }
+
+        Ball.BallQueue.Enqueue(ballsToEnque);
     }
 
     private void FillInVoidsHorizontal(List<Ball> ballsToFill)
     {
+        List<Ball> ballsToEnque = new List<Ball>();
+
         foreach (Ball ballToFill in ballsToFill)
         {
-            if (balls.Where(ball => ball.X == ballToFill.X)
-                .Any(ball => ball.BallColor != BallColors.None))
+            List<Ball> ballsToMove = balls
+                .Where(ball => ball.Y == ballToFill.Y &&
+                               ball.X < ballToFill.X)
+                .OrderByDescending(ball => ball.X)
+                    .ToList();
+            ballsToEnque = ballsToMove.Concat(ballsToEnque)
+                .ToList();
+
+            foreach (Ball cell in ballsToMove)
+                cell.X++;
+
+            ballToFill.X = 0;
+            ballToFill.RefreshRectangle();
+        }
+        Ball.BallQueue.Enqueue(ballsToEnque);
+
+    }
+
+    private void FillInVoidsInColumn()
+    {
+        for (int x = sizeInCells; x >= 0; x--)
+        {
+            List<Ball> ballsInColumn = balls.Where(ball => ball.X == x).OrderBy(ball => ball.Y)
+                .ToList();
+
+            if (ballsInColumn.Any(ball => ball.BallColor != BallColors.None))
                 continue;
 
-            List<Ball> ballsToMove = balls.Where(ball => ball.X == ballToFill.X).ToList();
-
-            foreach (Ball ball in balls.Where(ball => ball.X < ballToFill.X))
+            foreach (Ball ballInColumn in ballsInColumn)
             {
-                ball.X++;
-                ball.RefreshRectangle();
+                ballInColumn.BallColor = Ball.GetRandomColor();
+
+                Ball ballToSwap = balls.Where(ball => ball.Y == ballInColumn.Y &&
+                                                      ball.BallColor == BallColors.None)
+                    .OrderBy(ball => ball.X)
+                    .LastOrDefault(ballInColumn);
+
+                if (ballToSwap == ballInColumn)
+                    continue;
+
+                ballInColumn.X = ballToSwap.X;
+
+                ballToSwap.X = x;
+                ballToSwap.RefreshRectangle();
             }
 
-            foreach (Ball ball in ballsToMove)
-            {
-                ball.X = 0;
-                ball.BallColor = Ball.GetRandomColor();
-                ball.RefreshRectangle();
-            }
+            Ball.BallQueue.Enqueue(ballsInColumn);
         }
     }
 

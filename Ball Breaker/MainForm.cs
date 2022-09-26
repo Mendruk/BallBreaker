@@ -31,6 +31,8 @@ namespace Ball_Breaker
 
             game.SelectBall(x, y);
 
+            timer.Enabled = true;
+
             pictureGameField.Refresh();
         }
 
@@ -48,6 +50,15 @@ namespace Ball_Breaker
         {
             game.StartNewGame();
             pictureGameField.Refresh();
+        }
+
+        private void timer_Tick(object sender, EventArgs e)
+        {
+            Ball.QueueRefresh(out bool isEmpty);
+            if (!isEmpty)
+                pictureGameField.Refresh();
+            else
+                timer.Enabled = false;
         }
     }
 }
