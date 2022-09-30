@@ -14,7 +14,7 @@
             { BallColors.Violet, Brushes.Violet }
         };
 
-        public static Queue<List<Ball>> BallQueue=new Queue<List<Ball>>();
+        public int number;
 
         private readonly int cellSizeInPixels;
         private readonly int offset;
@@ -26,16 +26,15 @@
         private int pastX;
         private int pastY;
 
-
         public BallColors BallColor;
         public int X;
         public int Y;
 
-        public Ball(int x, int y, int cellSizeInPixels)
+        public Ball(int x, int y, int cellSizeInPixels, int number)
         {
             X = x;
             Y = y;
-
+            this.number = number;
             this.cellSizeInPixels = cellSizeInPixels;
 
             offset = cellSizeInPixels / 10;
@@ -48,24 +47,6 @@
         public static BallColors GetRandomColor()
         {
             return (BallColors)Random.Next(Enum.GetNames(typeof(BallColors)).Length - 1);
-        }
-
-        //todo rename
-        public static void QueueRefresh(out bool isEmpty)
-        {
-            if (BallQueue.Count == 0)
-            {
-                isEmpty = true;
-                return;
-            }
-
-            isEmpty = false;
-
-            List<Ball> balls = BallQueue.Dequeue();
-            foreach (Ball ball in balls)
-            {
-                ball.RefreshRectangle();
-            }
         }
 
         public void DrawBall(Graphics graphics)
@@ -91,17 +72,13 @@
             graphics.DrawString(score.ToString(), Font, Brushes.Black, strokeRectangle.X, strokeRectangle.Y);
         }
 
-        public void RefreshRectangle(int x, int y)
-        {
-            ballRectangle = new Rectangle(x * cellSizeInPixels + offset, y * cellSizeInPixels + offset,
-                cellSizeInPixels - offset * 2, cellSizeInPixels - offset * 2);
-
-            strokeRectangle = new Rectangle(x * cellSizeInPixels, y * cellSizeInPixels,
-                cellSizeInPixels, cellSizeInPixels);
-        }
         public void RefreshRectangle()
         {
-            RefreshRectangle(X, Y);
+            ballRectangle = new Rectangle(X * cellSizeInPixels + offset, Y * cellSizeInPixels + offset,
+                cellSizeInPixels - offset * 2, cellSizeInPixels - offset * 2);
+
+            strokeRectangle = new Rectangle(X * cellSizeInPixels, Y * cellSizeInPixels,
+                cellSizeInPixels, cellSizeInPixels);
         }
 
         public void RememberCurrentState()

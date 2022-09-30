@@ -10,6 +10,8 @@ public class Game
     private readonly List<Ball> balls;
     private readonly List<Ball> selectedBalls;
 
+    private Queue<Task> tasksQueue = new Queue<Task>();
+
     private int pastScore;
     public int Score;
     public bool CanUndo;
@@ -24,7 +26,7 @@ public class Game
 
         for (int x = 0; x < sizeInCells; x++)
             for (int y = 0; y < sizeInCells; y++)
-                balls.Add(new Ball(x, y, cellSizeInPixels));
+                balls.Add(new Ball(x, y, cellSizeInPixels, balls.Count));
     }
 
     public void Draw(Graphics graphics)
@@ -53,6 +55,7 @@ public class Game
                 .First()
                 .DrawCloud(graphics, CalculateScore(selectedBalls.Count));
     }
+
 
     public void SelectBall(int x, int y)
     {
@@ -111,9 +114,7 @@ public class Game
         }
 
         if (selectedBalls.Count == 1)
-        {
             selectedBalls.Clear();
-        }
     }
 
     private IEnumerable<Ball> EnumerateAdjacentBalls(Ball selectedBall)
@@ -161,7 +162,8 @@ public class Game
             }
         }
 
-        Ball.BallQueue.Enqueue(ballsToEnque);
+        tasksQueue.Enqueue(new Task(() => RefreshBallsRectangle(ballsToEnque)));
+
     }
 
     private void FillInVoidsHorizontal(List<Ball> ballsToFill)
@@ -184,40 +186,46 @@ public class Game
             ballToFill.X = 0;
             ballToFill.RefreshRectangle();
         }
-        Ball.BallQueue.Enqueue(ballsToEnque);
+
+        tasksQueue.Enqueue(new Task(() => RefreshBallsRectangle(ballsToEnque)));
 
     }
 
     private void FillInVoidsInColumn()
     {
-        for (int x = sizeInCells; x >= 0; x--)
-        {
-            List<Ball> ballsInColumn = balls.Where(ball => ball.X == x).OrderBy(ball => ball.Y)
-                .ToList();
+        List<Ball> ballsInColumn = new List<Ball>();
+        List<Ball>firstBallsColumn=new List<Ball>();
 
-            if (ballsInColumn.Any(ball => ball.BallColor != BallColors.None))
+        for (int x = sizeInCells - 1; x >= 0; x--)
+        {
+            if (balls.Where(ball => ball.X == x)
+                .All(ball => ball.BallColor == BallColors.None))
+                ballsInColumn = balls.Where(ball => ball.X == x).OrderBy(ball => ball.Y)
+                .Concat(ballsInColumn)
+                .ToList();
+        }
+
+        foreach (Ball ballInColumn in ballsInColumn)
+        {
+
+            Ball ballToSwap = balls.Where(ball => ball.Y == ballInColumn.Y &&
+                                                  ball.BallColor == BallColors.None)
+                .OrderBy(ball => ball.X)
+                .LastOrDefault(ballInColumn);
+
+            if (ballToSwap == ballInColumn)
                 continue;
 
-            foreach (Ball ballInColumn in ballsInColumn)
-            {
-                ballInColumn.BallColor = Ball.GetRandomColor();
+            int x = ballInColumn.X;
 
-                Ball ballToSwap = balls.Where(ball => ball.Y == ballInColumn.Y &&
-                                                      ball.BallColor == BallColors.None)
-                    .OrderBy(ball => ball.X)
-                    .LastOrDefault(ballInColumn);
+            ballInColumn.X = ballToSwap.X;
 
-                if (ballToSwap == ballInColumn)
-                    continue;
-
-                ballInColumn.X = ballToSwap.X;
-
-                ballToSwap.X = x;
-                ballToSwap.RefreshRectangle();
-            }
-
-            Ball.BallQueue.Enqueue(ballsInColumn);
+            ballToSwap.X = x;
+            ballToSwap.RefreshRectangle();
         }
+
+        tasksQueue.Enqueue(new Task(() => ChangeBallsColor(ballsInColumn)));
+        tasksQueue.Enqueue(new Task(() => RefreshBallsRectangle(ballsInColumn)));
     }
 
     private int CalculateScore(int ballCount)
@@ -268,5 +276,32 @@ public class Game
 
         foreach (Ball ball in balls)
             ball.BallColor = Ball.GetRandomColor();
+    }
+
+    private void RefreshBallsRectangle(List<Ball> balls)
+    {
+        foreach (Ball ball in balls)
+        {
+            ball.RefreshRectangle();
+        }
+    }
+
+    private void ChangeBallsColor(List<Ball> balls)
+    {
+        foreach (Ball ball in balls)
+        {
+            ball.BallColor = Ball.GetRandomColor();
+        }
+    }
+
+    public void TasksDequeue(out bool queueIsEmpty)
+    {
+        if (tasksQueue.Count != 0)
+        {
+            queueIsEmpty = false;
+            tasksQueue.Dequeue().Start();
+        }
+
+        queueIsEmpty = true;
     }
 }

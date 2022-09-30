@@ -54,11 +54,12 @@ namespace Ball_Breaker
 
         private void timer_Tick(object sender, EventArgs e)
         {
-            Ball.QueueRefresh(out bool isEmpty);
-            if (!isEmpty)
-                pictureGameField.Refresh();
-            else
-                timer.Enabled = false;
+            game.TasksDequeue(out bool queueIsEmpty);
+
+            //if(queueIsEmpty)
+            //    timer.Enabled = false;
+
+            pictureGameField.Refresh();
         }
     }
 }
