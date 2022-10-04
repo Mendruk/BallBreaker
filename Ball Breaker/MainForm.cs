@@ -1,3 +1,5 @@
+using System.Drawing.Drawing2D;
+
 namespace Ball_Breaker
 {
     public partial class MainForm : Form
@@ -6,6 +8,7 @@ namespace Ball_Breaker
         private readonly int cellSizeInPixels;
 
         private Game game;
+
         public MainForm()
         {
             InitializeComponent();
@@ -17,8 +20,9 @@ namespace Ball_Breaker
 
         private void pictureGameField_Paint(object sender, PaintEventArgs e)
         {
-            game.Draw(e.Graphics);            
-            
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            game.Draw(e.Graphics);
+
             labelScore.Text = $"Score: {game.Score}";
 
             buttonUndo.Enabled = game.CanUndo;
@@ -41,7 +45,7 @@ namespace Ball_Breaker
             if (!game.CanUndo)
                 return;
 
-            game.ReturnStates();
+            game.UndoPastTurn();
 
             pictureGameField.Refresh();
         }
@@ -54,12 +58,8 @@ namespace Ball_Breaker
 
         private void timer_Tick(object sender, EventArgs e)
         {
-            game.TasksDequeue(out bool queueIsEmpty);
 
-            //if(queueIsEmpty)
-            //    timer.Enabled = false;
-
-            pictureGameField.Refresh();
         }
+
     }
 }
