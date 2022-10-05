@@ -16,6 +16,8 @@ namespace Ball_Breaker
             cellSizeInPixels = Math.Min(pictureGameField.Width, pictureGameField.Height) / sizeInCells;
 
             game = new Game(sizeInCells, cellSizeInPixels);
+
+            game.Defeat += OnDefeat;
         }
 
         private void pictureGameField_Paint(object sender, PaintEventArgs e)
@@ -61,5 +63,11 @@ namespace Ball_Breaker
 
         }
 
+        private void OnDefeat(object? sender, EventArgs e)
+        {
+            pictureGameField.Refresh();
+            MessageBox.Show("You LOSE!", "Defeat");
+            game.StartNewGame();
+        }
     }
 }

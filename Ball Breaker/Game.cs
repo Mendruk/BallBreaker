@@ -10,8 +10,11 @@ public class Game
 
     private Queue<Task> tasksQueue = new();
 
+    private int pastScore;
     public int Score;
     public bool CanUndo;
+
+    public event EventHandler Defeat = delegate { };
 
     public Game(int sizeInCells, int cellSizeInPixels)
     {
@@ -92,8 +95,12 @@ public class Game
             MoveBallsHorizontallyIntoEmptyCells();
             FillEmptyCellsColumns();
 
+            pastScore = Score;
             Score += CalculateScore(selectedCells.Count);
             selectedCells.Clear();
+
+            if (AreDefeatConditionsMet())
+                Defeat(this, EventArgs.Empty);
 
             return;
         }
@@ -167,6 +174,7 @@ public class Game
     {
         CanUndo = false;
         selectedCells.Clear();
+        Score = pastScore;
 
         foreach (Cell cell in cells)
             cell.ReturnPastBallColor();
@@ -224,10 +232,20 @@ public class Game
 
             if (cellsColumn.All(cell => cell.BallColor == BallColors.None))
                 foreach (Cell cell in cellsColumn)
-                    cell.BallColor = Cell.GetRandomBallColor();
+                    cell.BallColor = Cell.GetRandomBallColorWithNone();
         }
 
         MoveBallsVerticallyIntoEmptyCells();
         MoveBallsHorizontallyIntoEmptyCells();
+    }
+
+    private bool AreDefeatConditionsMet()
+    {
+        if(cells.OfType<Cell>()
+           .Where(cell=>cell.BallColor!=BallColors.None)
+           .All(ball=>EnumerateAdjacentCells(ball).All(cell=>cell.BallColor!=ball.BallColor)))
+            return true;
+
+        return false;
     }
 }
