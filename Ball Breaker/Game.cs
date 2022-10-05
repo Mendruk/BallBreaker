@@ -33,6 +33,34 @@ public class Game
 
         foreach (Cell cell in cells)
             cell.DrawBall(graphics);
+
+        if (selectedCells.Count == 0)
+            return;
+
+        foreach (Cell selectedCell in selectedCells)
+        {
+            int x = selectedCell.X;
+            int y = selectedCell.Y;
+
+            BallColors color = selectedCell.BallColor;
+
+            if (x + 1 < sizeInCells && cells[x + 1, y].BallColor != color || x + 1 >= sizeInCells)
+                selectedCell.DrawCrossLineRelativeDirection(graphics, Direction.Right);
+
+            if (x - 1 >= 0 && cells[x - 1, y].BallColor != color || x - 1 < 0)
+                selectedCell.DrawCrossLineRelativeDirection(graphics, Direction.Left);
+
+            if (y + 1 < sizeInCells && cells[x, y + 1].BallColor != color || y + 1 >= sizeInCells)
+                selectedCell.DrawCrossLineRelativeDirection(graphics, Direction.Down); ;
+
+            if (y - 1 >= 0 && cells[x, y - 1].BallColor != color || y - 1 < 0)
+                selectedCell.DrawCrossLineRelativeDirection(graphics, Direction.Up);
+        }
+
+        selectedCells.OrderBy(cell=>cell.Y)
+            .ThenBy(cell=>cell.X)
+            .First()
+            .DrawExpectedScore(graphics,CalculateScore(selectedCells.Count));
     }
 
 
@@ -88,10 +116,10 @@ public class Game
             selectedCells.Clear();
     }
 
-    private IEnumerable<Cell> EnumerateAdjacentCells(Cell selectedBall)
+    private IEnumerable<Cell> EnumerateAdjacentCells(Cell selectedCell)
     {
-        int x = selectedBall.X;
-        int y = selectedBall.Y;
+        int x = selectedCell.X;
+        int y = selectedCell.Y;
 
         if (x + 1 < sizeInCells)
             yield return cells[x + 1, y];
@@ -114,6 +142,7 @@ public class Game
     public void StartNewGame()
     {
         CanUndo = false;
+        selectedCells.Clear();
         Score = 0;
 
         foreach (Cell cell in cells)
@@ -131,6 +160,7 @@ public class Game
     public void UndoPastTurn()
     {
         CanUndo = false;
+        selectedCells.Clear();
 
         foreach (Cell cell in cells)
             cell.ReturnPastBallColor();
