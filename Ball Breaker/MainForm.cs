@@ -35,9 +35,7 @@ namespace Ball_Breaker
             int x = e.X / cellSizeInPixels;
             int y = e.Y / cellSizeInPixels;
 
-            game.SelectBall(x, y);
-
-            timer.Enabled = true;
+            game.SelectBall(x, y, pictureGameField.Refresh);
 
             pictureGameField.Refresh();
         }
@@ -57,12 +55,6 @@ namespace Ball_Breaker
             game.StartNewGame();
             pictureGameField.Refresh();
         }
-
-        private void timer_Tick(object sender, EventArgs e)
-        {
-
-        }
-
         private void OnDefeat(object? sender, EventArgs e)
         {
             pictureGameField.Refresh();

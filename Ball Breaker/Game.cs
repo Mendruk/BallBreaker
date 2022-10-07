@@ -2,13 +2,12 @@
 
 public class Game
 {
+    private const int DelayTime = 30;
     private readonly int cellSizeInPixels;
     private readonly int sizeInCells;
 
     private readonly Cell[,] cells;
     private readonly List<Cell> selectedCells = new();
-
-    private Queue<Task> tasksQueue = new();
 
     private int pastScore;
     public int Score;
@@ -69,7 +68,7 @@ public class Game
     }
 
 
-    public void SelectBall(int x, int y)
+    public void SelectBall(int x, int y, Action refreshGameField)
     {
         Cell selectedCell = cells[x, y];
 
@@ -91,13 +90,13 @@ public class Game
             foreach (Cell cell in selectedCells)
                 cell.BallColor = BallColors.None;
 
-            MoveBallsVerticallyIntoEmptyCells();
-            MoveBallsHorizontallyIntoEmptyCells();
-            FillEmptyCellsColumns();
-
             pastScore = Score;
             Score += CalculateScore(selectedCells.Count);
             selectedCells.Clear();
+
+            MoveBallsVerticallyIntoEmptyCells(refreshGameField);
+            MoveBallsHorizontallyIntoEmptyCells(refreshGameField);
+            FillEmptyCellsColumns(refreshGameField);
 
             if (AreDefeatConditionsMet())
                 Defeat(this, EventArgs.Empty);
@@ -180,7 +179,7 @@ public class Game
             cell.ReturnPastBallColor();
     }
 
-    private void MoveBallsVerticallyIntoEmptyCells()
+    private void MoveBallsVerticallyIntoEmptyCells(Action refreshGameField)
     {
         List<Cell> cellsToMove = cells
             .OfType<Cell>()
@@ -198,10 +197,14 @@ public class Game
             cellToMove.BallColor = BallColors.None;
         }
 
-        MoveBallsVerticallyIntoEmptyCells();
+        refreshGameField();
+
+        Thread.Sleep(DelayTime);
+
+        MoveBallsVerticallyIntoEmptyCells(refreshGameField);
     }
 
-    private void MoveBallsHorizontallyIntoEmptyCells()
+    private void MoveBallsHorizontallyIntoEmptyCells(Action refreshGameField)
     {
         List<Cell> cellsToMove = cells
             .OfType<Cell>()
@@ -219,10 +222,14 @@ public class Game
             cellToMove.BallColor = BallColors.None;
         }
 
-        MoveBallsHorizontallyIntoEmptyCells();
+        refreshGameField();
+        
+        Thread.Sleep(DelayTime*2);
+
+        MoveBallsHorizontallyIntoEmptyCells(refreshGameField);
     }
 
-    private void FillEmptyCellsColumns()
+    private void FillEmptyCellsColumns(Action refreshGameField)
     {
         for (int x = 0; x < sizeInCells; x++)
         {
@@ -235,15 +242,19 @@ public class Game
                     cell.BallColor = Cell.GetRandomBallColorWithNone();
         }
 
-        MoveBallsVerticallyIntoEmptyCells();
-        MoveBallsHorizontallyIntoEmptyCells();
+        refreshGameField();
+
+        Thread.Sleep(DelayTime);
+
+        MoveBallsVerticallyIntoEmptyCells(refreshGameField);
+        MoveBallsHorizontallyIntoEmptyCells(refreshGameField);
     }
 
     private bool AreDefeatConditionsMet()
     {
-        if(cells.OfType<Cell>()
-           .Where(cell=>cell.BallColor!=BallColors.None)
-           .All(ball=>EnumerateAdjacentCells(ball).All(cell=>cell.BallColor!=ball.BallColor)))
+        if (cells.OfType<Cell>()
+           .Where(cell => cell.BallColor != BallColors.None)
+           .All(ball => EnumerateAdjacentCells(ball).All(cell => cell.BallColor != ball.BallColor)))
             return true;
 
         return false;

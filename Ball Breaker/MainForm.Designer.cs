@@ -28,12 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             this.pictureGameField = new System.Windows.Forms.PictureBox();
             this.buttonNewGame = new System.Windows.Forms.Button();
             this.buttonUndo = new System.Windows.Forms.Button();
             this.labelScore = new System.Windows.Forms.Label();
-            this.timer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pictureGameField)).BeginInit();
             this.SuspendLayout();
             // 
@@ -91,12 +89,6 @@
             this.labelScore.Text = "Score: 0";
             this.labelScore.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // timer
-            // 
-            this.timer.Enabled = true;
-            this.timer.Interval = 50;
-            this.timer.Tick += new System.EventHandler(this.timer_Tick);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
@@ -122,6 +114,5 @@
         private Button buttonNewGame;
         private Button buttonUndo;
         private Label labelScore;
-        private System.Windows.Forms.Timer timer;
     }
 }
