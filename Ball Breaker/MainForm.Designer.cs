@@ -48,6 +48,7 @@
             this.pictureGameField.TabStop = false;
             this.pictureGameField.Paint += new System.Windows.Forms.PaintEventHandler(this.pictureGameField_Paint);
             this.pictureGameField.MouseClick += new System.Windows.Forms.MouseEventHandler(this.pictureGameField_MouseClick);
+            this.pictureGameField.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.pictureGameField_MouseDoubleClick);
             // 
             // buttonNewGame
             // 

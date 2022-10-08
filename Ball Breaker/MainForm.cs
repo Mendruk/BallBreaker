@@ -61,5 +61,10 @@ namespace Ball_Breaker
             MessageBox.Show("You LOSE!", "Defeat");
             game.StartNewGame();
         }
+
+        private void pictureGameField_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            pictureGameField_MouseClick(sender, e);
+        }
     }
 }

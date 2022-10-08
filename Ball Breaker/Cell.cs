@@ -70,11 +70,6 @@ public class Cell
         return (BallColors)Random.Next(Enum.GetNames(typeof(BallColors)).Length - 1);
     }
 
-    public static BallColors GetRandomBallColorWithNone()
-    {
-        return (BallColors)Random.Next(Enum.GetNames(typeof(BallColors)).Length);
-    }
-
     public void DrawBall(Graphics graphics)
     {
         if (BallBrushes.TryGetValue(BallColor, out Brush? brash))
