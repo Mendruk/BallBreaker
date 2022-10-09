@@ -35,6 +35,12 @@ namespace Ball_Breaker
             int x = e.X / cellSizeInPixels;
             int y = e.Y / cellSizeInPixels;
 
+            if (x >= sizeInCells)
+                x = sizeInCells - 1;
+
+            if (y >= sizeInCells)
+                y = sizeInCells - 1;
+
             game.SelectBall(x, y, pictureGameField.Refresh);
 
             pictureGameField.Refresh();

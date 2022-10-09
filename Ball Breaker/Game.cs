@@ -11,9 +11,7 @@ public class Game
     private readonly Cell[,] cells;
     private readonly List<Cell> selectedCells = new();
 
-    private int pastScore;
-    public int Score;
-    public bool CanUndo;
+    private int previousScore;
 
     public event EventHandler Defeat = delegate { };
 
@@ -28,6 +26,9 @@ public class Game
             for (int y = 0; y < sizeInCells; y++)
                 cells[x, y] = new Cell(x, y, cellSizeInPixels);
     }
+
+    public int Score { get; private set; }
+    public bool CanUndo { get; private set; }
 
     public void Draw(Graphics graphics)
     {
@@ -85,36 +86,49 @@ public class Game
 
         if (selectedCells.Contains(selectedCell))
         {
-            CanUndo = true;
-
-            RememberEachBallColor();
-
-            foreach (Cell cell in selectedCells)
-                cell.BallColor = BallColors.None;
-
-            pastScore = Score;
-            Score += CalculateScore(selectedCells.Count);
-            selectedCells.Clear();
-
-            MoveBallsVerticallyIntoEmptyCells();
-            refreshGameField();
-            Thread.Sleep(DelayTime);
-
-            MoveBallsHorizontallyIntoEmptyCells();
-            refreshGameField();
-            Thread.Sleep(DelayTime * 2);
-
-            FillEmptyCellsColumns();
-            refreshGameField();
-
-            if (AreDefeatConditionsMet())
-                Defeat(this, EventArgs.Empty);
+            DeletingSelectedBalls(refreshGameField);
 
             return;
         }
 
         selectedCells.Clear();
 
+        SelectionBallsOfSameColor(selectedCell);
+
+        if (selectedCells.Count == 1)
+            selectedCells.Clear();
+    }
+
+    private void DeletingSelectedBalls(Action refreshGameField)
+    {
+        CanUndo = true;
+
+        RememberEachBallColor();
+
+        foreach (Cell cell in selectedCells)
+            cell.BallColor = BallColors.None;
+
+        previousScore = Score;
+        Score += CalculateScore(selectedCells.Count);
+        selectedCells.Clear();
+
+        MoveBallsVerticallyIntoEmptyCells();
+        refreshGameField();
+        Thread.Sleep(DelayTime);
+
+        MoveBallsHorizontallyIntoEmptyCells();
+        refreshGameField();
+        Thread.Sleep(DelayTime * 2);
+
+        FillEmptyCellsColumns(refreshGameField);
+        refreshGameField();
+
+        if (AreDefeatConditionsMet())
+            Defeat(this, EventArgs.Empty);
+    }
+
+    private void SelectionBallsOfSameColor(Cell selectedCell)
+    {
         BallColors selectedBallColor = selectedCell.BallColor;
 
         Stack<Cell> cellsStack = new();
@@ -132,9 +146,6 @@ public class Game
                     !selectedCells.OfType<Cell>().Contains(cellToPush))
                     cellsStack.Push(cellToPush);
         }
-
-        if (selectedCells.Count == 1)
-            selectedCells.Clear();
     }
 
     private IEnumerable<Cell> EnumerateAdjacentCells(Cell selectedCell)
@@ -170,22 +181,22 @@ public class Game
             cell.BallColor = Cell.GetRandomBallColor();
     }
 
-    public void RememberEachBallColor()
+    public void UndoPastTurn()
+    {
+        CanUndo = false;
+        selectedCells.Clear();
+        Score = previousScore;
+
+        foreach (Cell cell in cells)
+            cell.ReturnPastBallColor();
+    }
+
+    private void RememberEachBallColor()
     {
         CanUndo = true;
 
         foreach (Cell cell in cells)
             cell.RememberBallColor();
-    }
-
-    public void UndoPastTurn()
-    {
-        CanUndo = false;
-        selectedCells.Clear();
-        Score = pastScore;
-
-        foreach (Cell cell in cells)
-            cell.ReturnPastBallColor();
     }
 
     private void MoveBallsVerticallyIntoEmptyCells()
@@ -230,11 +241,11 @@ public class Game
         MoveBallsHorizontallyIntoEmptyCells();
     }
 
-    private void FillEmptyCellsColumns()
+    private void FillEmptyCellsColumns(Action refreshGameField)
     {
         for (int x = 0; x < sizeInCells; x++)
         {
-            if (cells[x, sizeInCells-1].BallColor != BallColors.None)
+            if (cells[x, sizeInCells - 1].BallColor != BallColors.None)
                 continue;
 
             int randomNumberOfBallsInColumn = random.Next(sizeInCells - 2);
@@ -243,16 +254,16 @@ public class Game
                 cells[x, y].BallColor = Cell.GetRandomBallColor();
         }
 
+        refreshGameField();
+        Thread.Sleep(DelayTime);
+
         MoveBallsHorizontallyIntoEmptyCells();
     }
 
     private bool AreDefeatConditionsMet()
     {
-        if (cells.OfType<Cell>()
-           .Where(cell => cell.BallColor != BallColors.None)
-           .All(ball => EnumerateAdjacentCells(ball).All(cell => cell.BallColor != ball.BallColor)))
-            return true;
-
-        return false;
+        return cells.OfType<Cell>()
+            .Where(cell => cell.BallColor != BallColors.None)
+            .All(ball => EnumerateAdjacentCells(ball).All(cell => cell.BallColor != ball.BallColor));
     }
 }

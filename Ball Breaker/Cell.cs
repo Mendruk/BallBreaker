@@ -2,8 +2,6 @@
 
 public class Cell
 {
-    private const int EdgesNumber = 4;
-
     private static readonly Random Random = new();
 
     private static readonly Pen LinePen = new(Color.Black, 2);
@@ -22,9 +20,8 @@ public class Cell
 
     private readonly Rectangle ballRectangle;
     private readonly Rectangle cellRectangle;
-    private readonly Point[] points;
 
-    private BallColors pastBallColor;
+    private BallColors previousBallColor;
     public BallColors BallColor;
 
     static Cell()
@@ -48,18 +45,6 @@ public class Cell
             cellSizeInPixels - borderOffset * 2, cellSizeInPixels - borderOffset * 2);
 
         cellRectangle = new Rectangle(xInPixels, yInPixels, cellSizeInPixels, cellSizeInPixels);
-
-        points = new Point[EdgesNumber]
-       {
-            //top left => points[0]
-            new (xInPixels, yInPixels),
-            //top right => points[1]
-            new (xInPixels + cellSizeInPixels, yInPixels),
-            //bottom right => points[2]
-            new (xInPixels + cellSizeInPixels, yInPixels + cellSizeInPixels),
-            //bottom left => points[3]
-            new (xInPixels, yInPixels + cellSizeInPixels)
-       };
     }
 
     public int X { get; }
@@ -72,38 +57,29 @@ public class Cell
 
     public void DrawBall(Graphics graphics)
     {
-        if (BallBrushes.TryGetValue(BallColor, out Brush? brash))
-            graphics.FillEllipse(brash, ballRectangle);
+        if (BallBrushes.TryGetValue(BallColor, out Brush? brush))
+            graphics.FillEllipse(brush, ballRectangle);
     }
 
     public void DrawCrossLineRelativeDirection(Graphics graphics, Direction direction)
     {
-        Point FirstLinePoint;
-        Point SecondLinePoint;
-
         switch (direction)
         {
             case Direction.Left:
-                FirstLinePoint = points[3];
-                SecondLinePoint = points[0];
+                graphics.DrawLine(LinePen, cellRectangle.X, cellRectangle.Bottom, cellRectangle.X, cellRectangle.Y);
                 break;
             case Direction.Right:
-                FirstLinePoint = points[1];
-                SecondLinePoint = points[2];
+                graphics.DrawLine(LinePen, cellRectangle.Right, cellRectangle.Y, cellRectangle.Right, cellRectangle.Bottom);
                 break;
             case Direction.Up:
-                FirstLinePoint = points[0];
-                SecondLinePoint = points[1];
+                graphics.DrawLine(LinePen, cellRectangle.X, cellRectangle.Y, cellRectangle.Right, cellRectangle.Y);
                 break;
             case Direction.Down:
-                FirstLinePoint = points[2];
-                SecondLinePoint = points[3];
+                graphics.DrawLine(LinePen, cellRectangle.Right, cellRectangle.Bottom, cellRectangle.X, cellRectangle.Bottom);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
         }
-
-        graphics.DrawLine(LinePen, FirstLinePoint, SecondLinePoint);
     }
 
     public void DrawExpectedScore(Graphics graphics, int expectedScore)
@@ -122,11 +98,11 @@ public class Cell
 
     public void RememberBallColor()
     {
-        pastBallColor = BallColor;
+        previousBallColor = BallColor;
     }
 
     public void ReturnPastBallColor()
     {
-        BallColor = pastBallColor;
+        BallColor = previousBallColor;
     }
 }
