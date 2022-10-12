@@ -101,7 +101,7 @@ public class Cell
         previousBallColor = BallColor;
     }
 
-    public void ReturnPastBallColor()
+    public void ReturnPreviousBallColor()
     {
         BallColor = previousBallColor;
     }

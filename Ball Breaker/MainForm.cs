@@ -51,7 +51,7 @@ namespace Ball_Breaker
             if (!game.CanUndo)
                 return;
 
-            game.UndoPastTurn();
+            game.UndoPreviousTurn();
 
             pictureGameField.Refresh();
         }

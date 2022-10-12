@@ -86,20 +86,20 @@ public class Game
 
         if (selectedCells.Contains(selectedCell))
         {
-            DeletingSelectedBalls(refreshGameField);
+            DeleteSelectedBalls(refreshGameField);
 
             return;
         }
 
         selectedCells.Clear();
 
-        SelectionBallsOfSameColor(selectedCell);
+        SelectBallsOfSameColor(selectedCell);
 
         if (selectedCells.Count == 1)
             selectedCells.Clear();
     }
 
-    private void DeletingSelectedBalls(Action refreshGameField)
+    private void DeleteSelectedBalls(Action refreshGameField)
     {
         CanUndo = true;
 
@@ -112,11 +112,11 @@ public class Game
         Score += CalculateScore(selectedCells.Count);
         selectedCells.Clear();
 
-        MoveBallsIntoEmptyCells(ShiftDirections.TopToDown);
+        MoveBallsIntoEmptyCells(0, 1);
         refreshGameField();
         Thread.Sleep(DelayTime);
 
-        MoveBallsIntoEmptyCells(ShiftDirections.LeftToRight);
+        MoveBallsIntoEmptyCells(1, 0);
         refreshGameField();
         Thread.Sleep(DelayTime * 2);
 
@@ -127,7 +127,7 @@ public class Game
             Defeat(this, EventArgs.Empty);
     }
 
-    private void SelectionBallsOfSameColor(Cell selectedCell)
+    private void SelectBallsOfSameColor(Cell selectedCell)
     {
         BallColors selectedBallColor = selectedCell.BallColor;
 
@@ -181,14 +181,14 @@ public class Game
             cell.BallColor = Cell.GetRandomBallColor();
     }
 
-    public void UndoPastTurn()
+    public void UndoPreviousTurn()
     {
         CanUndo = false;
         selectedCells.Clear();
         Score = previousScore;
 
         foreach (Cell cell in cells)
-            cell.ReturnPastBallColor();
+            cell.ReturnPreviousBallColor();
     }
 
     private void RememberEachBallColor()
@@ -199,52 +199,28 @@ public class Game
             cell.RememberBallColor();
     }
 
-    private void MoveBallsIntoEmptyCells(ShiftDirections direction)
+    private void MoveBallsIntoEmptyCells(int xShiftSides, int yShiftSides)
     {
-
         List<Cell> cellsToMove = new();
 
-        switch (direction)
+        cellsToMove = cells
+                    .OfType<Cell>()
+                    .Where(cell => cell.X + xShiftSides < sizeInCells &&
+                                   cell.Y + yShiftSides < sizeInCells &&
+                                   cell.BallColor != BallColors.None &&
+                                   cells[cell.X + xShiftSides, cell.Y + yShiftSides].BallColor == BallColors.None)
+                    .ToList();
+
+        if (cellsToMove.Count == 0)
+            return;
+
+        foreach (Cell cellToMove in cellsToMove)
         {
-            case ShiftDirections.TopToDown:
-                cellsToMove = cells
-                    .OfType<Cell>()
-                    .Where(cell => cell.Y + 1 < sizeInCells &&
-                                   cell.BallColor != BallColors.None &&
-                                   cells[cell.X, cell.Y + 1].BallColor == BallColors.None)
-                    .ToList();
-
-                if (cellsToMove.Count == 0)
-                    return;
-
-                foreach (Cell cellToMove in cellsToMove)
-                {
-                    cells[cellToMove.X, cellToMove.Y + 1].BallColor = cellToMove.BallColor;
-                    cellToMove.BallColor = BallColors.None;
-                }
-
-                break;
-            case ShiftDirections.LeftToRight:
-                cellsToMove = cells
-                    .OfType<Cell>()
-                    .Where(cell => cell.X + 1 < sizeInCells &&
-                                   cell.BallColor != BallColors.None &&
-                                   cells[cell.X + 1, cell.Y].BallColor == BallColors.None)
-                    .ToList();
-                if (cellsToMove.Count == 0)
-                    return;
-
-                foreach (Cell cellToMove in cellsToMove)
-                {
-                    cells[cellToMove.X + 1, cellToMove.Y].BallColor = cellToMove.BallColor;
-                    cellToMove.BallColor = BallColors.None;
-                }
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(direction), direction, null);
+            cells[cellToMove.X + xShiftSides, cellToMove.Y + yShiftSides].BallColor = cellToMove.BallColor;
+            cellToMove.BallColor = BallColors.None;
         }
 
-        MoveBallsIntoEmptyCells(direction);
+        MoveBallsIntoEmptyCells(xShiftSides, yShiftSides);
     }
 
     private void FillEmptyCellsColumns(Action refreshGameField)
@@ -263,7 +239,7 @@ public class Game
         refreshGameField();
         Thread.Sleep(DelayTime);
 
-        MoveBallsIntoEmptyCells(ShiftDirections.LeftToRight);
+        MoveBallsIntoEmptyCells(1, 0);
     }
 
     private bool AreDefeatConditionsMet()
